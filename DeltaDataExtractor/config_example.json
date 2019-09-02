@@ -1,0 +1,35 @@
+﻿{
+  "install_path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\ARK\\ShooterGame\\Content",
+  "output_path": "C:\\Users\\Roman\\Desktop\\ARK Out\\",
+  "exclude_regex": [
+    "/Game/Maps/.*",
+    "/Game/Localization/.*",
+    "/Game/PrimalEarth/Weapon[^/]+.*",
+    "/Game/ReflectionCaptures/.*",
+    ".*/(Core)?(Animation|Anim|Effect|Environment|Material|Mesh|Particle|Sound|Texture)s?/.*",
+    ".*/T_[^/]+",
+    ".*/Meshes/.*"
+  ],
+  "enviornment": "staging",
+  "mods": [
+    "111111111"
+  ],
+  "system_mods": [
+    "Ragnarok",
+    "TheCenter",
+    "Valguero"
+  ],
+  "profiles": {
+    "staging": {
+      "user_name": "[removed]",
+      "user_password": "[removed]",
+      "user_server": "packages-staging.deltamap.net",
+      "upload_packages": "/var/www/delta/packages/",
+      "upload_version": "/var/www/delta/packages/v.json",
+      "upload_images": "/var/www/delta/icons/charlie/",
+      "upload_url_b ase": "https://icon-assets.deltamap.net/charlie/",
+      "persist_storage_path": "D:\\charlie_persist_staging.json",
+      "log_path": "D:\\charlie_log.txt"
+    }
+  }
+}
