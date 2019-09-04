@@ -10,5 +10,6 @@ namespace DeltaDataExtractor.OutputEntities
         public string id;
         public string name;
         public string patch_tag;
+        public string sha1; //SHA-1 of contents
     }
 }

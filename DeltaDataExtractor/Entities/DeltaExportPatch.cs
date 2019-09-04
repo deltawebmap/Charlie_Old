@@ -1,9 +1,11 @@
 ﻿using ArkImportTools;
 using DeltaDataExtractor.Entities.FileManager;
+using DeltaDataExtractor.OutputEntities;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using static ArkImportTools.ImageTool;
 
@@ -91,6 +93,27 @@ namespace DeltaDataExtractor.Entities
             //Process images
             ImageTool.ProcessImages(new List<string>(), this);
 
+            //Upload new config file
+            Log.WriteSuccess("DeltaExportPackage", "Almost finished, uploading new config to server...");
+            using(MemoryStream cfgStream = new MemoryStream())
+            {
+                //Create config file
+                OutputFile outputCfg = new OutputFile
+                {
+                    latest_patch = tag,
+                    latest_patch_time = time,
+                    packages = persist.packages
+                };
+
+                //Get bytes and copy
+                byte[] buf = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(outputCfg, Formatting.Indented));
+                cfgStream.Write(buf, 0, buf.Length);
+
+                //Rewind and upload
+                cfgStream.Position = 0;
+                asset_manager.Upload(env.upload_config, cfgStream);
+            }
+
             //Save persistent storage
             File.WriteAllText(env.persist_storage_path, JsonConvert.SerializeObject(persist, Formatting.Indented));
 
@@ -104,17 +127,63 @@ namespace DeltaDataExtractor.Entities
         /// <summary>
         /// Computes one package
         /// </summary>
-        private void RunOne(DeltaExportPackage pack)
+        private string RunOne(DeltaExportPackage pack)
         {
             //Run and obtain a stream
-            Stream data = pack.Run();
+            Stream data = pack.Run(out string hash);
 
-            //Now, we'll upload it to the server
-            Log.WriteInfo("DeltaExportPatch Run", "Uploading to server...");
-            var profile = Program.config.GetProfile();
-            asset_manager.Upload(profile.upload_packages + tag + "-" + pack.id + ".pdp", data);
-            Log.WriteSuccess("DeltaExportPatch Run", "Uploaded " + data.Length + " bytes as a primal data package.");
+            //Create filename
+            string filename = tag + "-" + pack.id + ".pdp";
+
+            //Check if we already have data for this from before
+            var packagePersistData = persist.packages.Where(x => x.name == pack.name).ToArray();
+            string previousHash = null;
+            if(packagePersistData.Length == 0)
+            {
+                //We do not already have data for this. We do not need to worry about version control, but we should add our own entry
+                AddPackageToPersist(pack, hash, filename);
+            } else if(packagePersistData.Length == 1)
+            {
+                //We already have data. If the previous hash is different to our current hash, we'll update it
+                previousHash = packagePersistData[0].sha1;
+                if(previousHash != hash)
+                {
+                    persist.packages.Remove(packagePersistData[0]);
+                    AddPackageToPersist(pack, hash, filename);
+                }
+            } else
+            {
+                //More than one. Abort!
+                throw new Exception();
+            }
+
+            //Check if this is up to date
+            if(previousHash != hash)
+            {
+                //Now, we'll upload it to the server
+                Log.WriteInfo("DeltaExportPatch Run", "Uploading to server...");
+                var profile = Program.config.GetProfile();
+                asset_manager.Upload(profile.upload_packages + filename, data);
+                Log.WriteSuccess("DeltaExportPatch Run", "Uploaded " + data.Length + " bytes as a primal data package.");
+            } else
+            {
+                Log.WriteInfo("DeltaExportPatch Run", "Package was already up to date: "+hash);
+            }
+
+            return hash;
         }
 
+        private void AddPackageToPersist(DeltaExportPackage pack, string hash, string filename)
+        {
+            persist.packages.Add(new DeltaExportBranchPackage
+            {
+                name = pack.name,
+                patch = tag,
+                sha1 = hash,
+                time = DateTime.UtcNow,
+                url = Program.config.GetProfile().package_url_base + filename,
+                id = pack.id
+            });
+        }
     }
 }

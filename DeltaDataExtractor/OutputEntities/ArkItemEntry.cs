@@ -16,8 +16,6 @@ namespace ArkImportTools.OutputEntities
         public ArkImage icon;
         public ArkImage broken_icon;
 
-        public int captureTime;
-
         public bool hideFromInventoryDisplay { get; set; }
         public bool useItemDurability { get; set; }
         public bool isTekItem { get; set; }
@@ -69,9 +67,6 @@ namespace ArkImportTools.OutputEntities
                 }
             }
 
-            //Get time
-            int time = (int)Math.Round((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds);
-
             //Create
             ArkItemEntry e = new ArkItemEntry
             {
@@ -91,8 +86,7 @@ namespace ArkImportTools.OutputEntities
                 blueprintPath = "N/A",
                 icon = icon,
                 broken_icon = brokenIcon,
-                addStatusValues = statusValues,
-                captureTime = time
+                addStatusValues = statusValues
             };
             return e;
         }

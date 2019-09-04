@@ -19,7 +19,7 @@ namespace DeltaDataExtractor
             config = JsonConvert.DeserializeObject<ExtractorConfig>(File.ReadAllText("config.json"));
 
             //Generate a revision tag and make it's folder structure
-            log = new FileStream(config.GetProfile().charlie_log, FileMode.Create);
+            log = new FileStream(config.GetProfile().log_path, FileMode.Create);
 
             //Do some logging
             Log.WriteHeader("Data created " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + " LOCAL");

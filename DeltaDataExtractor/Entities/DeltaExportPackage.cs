@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using UassetToolkit;
 
@@ -89,7 +91,7 @@ namespace DeltaDataExtractor.Entities
         /// <summary>
         /// Extracts data and returns the package
         /// </summary>
-        public Stream Run()
+        public Stream Run(out string hash)
         {
             //Get pathnames that match this
             List<ArkAsset>[] files = DiscoveryService.DiscoverFiles(installation, this);
@@ -107,24 +109,37 @@ namespace DeltaDataExtractor.Entities
             return CompilePackage(new Dictionary<string, object>
             {
                 {"items.json", items }
-            });
+            }, out hash);
         }
 
         /// <summary>
         /// Produces a ZIP file with this data
         /// </summary>
         /// <param name="payload"></param>
-        private Stream CompilePackage(Dictionary<string, object> payload)
+        private Stream CompilePackage(Dictionary<string, object> payload, out string hash)
         {
             //Create the ZIP archive
             MemoryStream stream = new MemoryStream();
             ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, true);
 
-            //Add all of our objects
-            foreach(var o in payload)
+            //Add all of our objects, then SHA-1 them
+            using (MemoryStream dataStream = new MemoryStream())
             {
-                CompilePackageHelper(archive, o.Key, o.Value);
+                //Add all
+                foreach (var o in payload)
+                {
+                    CompilePackageHelper(archive, o.Key, o.Value, dataStream);
+                }
+
+                //Rewind and SHA-1
+                dataStream.Position = 0;
+                using (SHA1Managed sha1 = new SHA1Managed())
+                {
+                    byte[] hashBytes = sha1.ComputeHash(dataStream);
+                    hash = string.Concat(hashBytes.Select(b => b.ToString("x2")));
+                }
             }
+
 
             //Add the metadata
             CompilePackageHelper(archive, "metadata.json", new DeltaExportPackageMetadata
@@ -132,7 +147,8 @@ namespace DeltaDataExtractor.Entities
                 id = id,
                 name = name,
                 patch_tag = patch.tag,
-                time = patch.time
+                time = patch.time,
+                sha1 = hash
             });
 
             //Close the archive and rewind the stream
@@ -142,7 +158,7 @@ namespace DeltaDataExtractor.Entities
             return stream;
         }
 
-        private void CompilePackageHelper(ZipArchive zip, string name, object data)
+        private void CompilePackageHelper(ZipArchive zip, string name, object data, MemoryStream totalOutput = null)
         {
             //Convert to JSON and get bytes
             byte[] payload = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data));
@@ -151,6 +167,8 @@ namespace DeltaDataExtractor.Entities
             ZipArchiveEntry entry = zip.CreateEntry(name);
             using (var stream = entry.Open())
                 stream.Write(payload, 0, payload.Length);
+            if(totalOutput != null)
+                totalOutput.Write(payload, 0, payload.Length);
         }
     }
 }

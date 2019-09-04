@@ -31,14 +31,15 @@ namespace DeltaDataExtractor
 
         //Locations of output
         public string upload_packages;
-        public string upload_version;
+        public string upload_config;
         public string upload_images;
 
         //URL
         public string upload_url_base;
+        public string package_url_base;
 
         //Misc
         public string persist_storage_path;
-        public string charlie_log;
+        public string log_path;
     }
 }

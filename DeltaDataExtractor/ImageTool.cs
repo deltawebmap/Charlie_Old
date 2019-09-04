@@ -43,16 +43,24 @@ namespace ArkImportTools
 
             //Check for matching file pathnames and versions
             var matches = patch.persist.external_assets.Where(x => x.sha1 == hash && x.name == namespacedName).ToArray();
+            var queuedMatches = patch.queued_images.Where(x => x.name == namespacedName).ToArray();
 
             //Create or get
             string hiId;
             string loId;
-            if(matches.Length == 1)
+            if (matches.Length >= 1)
             {
                 //We'll use this existing image
-                hiId = matches[0].url_hires;
-                loId = matches[0].url_lores;
-            } else
+                hiId = matches[0].id_hires;
+                loId = matches[0].id_lores;
+            }
+            else if (queuedMatches.Length >= 1)
+            {
+                //We'll use the existing queued image
+                hiId = queuedMatches[0].hiId;
+                loId = queuedMatches[0].loId;
+            } 
+            else
             {
                 //We'll generate this
 
@@ -124,6 +132,7 @@ namespace ArkImportTools
             for(int i = 0; i<queue.Count; i+=1)
             {
                 QueuedImage q = queue[i];
+                bool status = false;
 
                 try
                 {
@@ -200,17 +209,7 @@ namespace ArkImportTools
                                 patch.asset_manager.Upload(Program.config.GetProfile().upload_images + q.loId + FORMAT_TYPE, ms);
                             }
 
-                            //Now, add to persistent storage
-                            patch.persist.external_assets.Add(new DeltaExportBranchExternalAsset
-                            {
-                                name = q.name,
-                                patch = patch.tag,
-                                sha1 = q.sha1,
-                                time = DateTime.UtcNow,
-                                url_hires = GetAssetsUrl() + q.hiId + FORMAT_TYPE,
-                                url_lores = GetAssetsUrl() + q.loId + FORMAT_TYPE
-                            });
-
+                            status = true;
                             ok++;
                         }
                     }
@@ -219,6 +218,18 @@ namespace ArkImportTools
                     Console.WriteLine($"Failed to process image {q.classname} with error {ex.Message}");
                     readErrors.Add($"Failed to process image {q.classname} with error {ex.Message} {ex.StackTrace}");
                 }
+
+                //Now, add to persistent storage
+                patch.persist.external_assets.Add(new DeltaExportBranchExternalAsset
+                {
+                    name = q.name,
+                    patch = patch.tag,
+                    sha1 = q.sha1,
+                    time = DateTime.UtcNow,
+                    id_hires = q.hiId,
+                    id_lores = q.loId,
+                    ok = status
+                });
             }
             Log.WriteSuccess("ImageTool", $"Processed and uploading {ok}/{queue.Count} images.");
             queue.Clear();
