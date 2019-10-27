@@ -1,5 +1,6 @@
 ﻿using ArkImportTools.OutputEntities;
 using DeltaDataExtractor.Entities;
+using LibDeltaSystem.Entities.ArkEntries.Dinosaur;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,10 +10,10 @@ namespace DeltaDataExtractor.Services
 {
     public static class ItemExtractorService
     {
-        public static List<ArkItemEntry> ExtractItems(UAssetCacheBlock cache, List<ArkAsset> assets, DeltaExportPatch patch)
+        public static List<ItemEntry> ExtractItems(UAssetCacheBlock cache, List<ArkAsset> assets, DeltaExportPatch patch)
         {
             //Loop through all assets
-            List<ArkItemEntry> items = new List<ArkItemEntry>();
+            List<ItemEntry> items = new List<ItemEntry>();
             foreach(var a in assets)
             {
                 //Open 
@@ -31,7 +32,7 @@ namespace DeltaDataExtractor.Services
                 //Decode
                 try
                 {
-                    ArkItemEntry entry = ArkItemEntry.ConvertEntry(bp, cache, patch);
+                    ItemEntry entry = ArkItemEntryReader.ConvertEntry(bp, cache, patch);
                     items.Add(entry);
                     TimeSpan time = DateTime.UtcNow - start;
                     Log.WriteInfo("Item Extractor", "Successfully opened and converted " + a.fullName +" in "+Math.Round(time.TotalMilliseconds) +"ms");

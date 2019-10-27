@@ -40,5 +40,12 @@ namespace DeltaDataExtractor
             log.Close();
             Console.ReadLine();
         }
+
+        public static string TrimArkClassname(string name)
+        {
+            if (name.EndsWith("_C"))
+                return name.Substring(0, name.Length - 1);
+            return name;
+        }
     }
 }

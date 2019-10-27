@@ -1,5 +1,6 @@
 ﻿using DeltaDataExtractor.Entities;
 using LibDeltaSystem.Entities.ArkEntries;
+using LibDeltaSystem.Entities.ArkEntries.Dinosaur;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,31 +10,9 @@ using UassetToolkit.UStructTypes;
 
 namespace ArkImportTools.OutputEntities
 {
-    public class ArkItemEntry
+    public static class ArkItemEntryReader
     {
-        public string classname;
-        public string blueprintPath;
-
-        public DeltaAsset icon;
-        public DeltaAsset broken_icon;
-
-        public bool hideFromInventoryDisplay { get; set; }
-        public bool useItemDurability { get; set; }
-        public bool isTekItem { get; set; }
-        public bool allowUseWhileRiding { get; set; }
-        public string name { get; set; }
-        public string description { get; set; }
-        public float spoilingTime { get; set; } //0 if not spoiling
-        public float baseItemWeight { get; set; }
-        public float useCooldownTime { get; set; }
-        public float baseCraftingXP { get; set; }
-        public float baseRepairingXP { get; set; }
-        public int maxItemQuantity { get; set; }
-
-        //Consumables
-        public Dictionary<string, ArkItemEntry_ConsumableAddStatusValue> addStatusValues;
-
-        public static ArkItemEntry ConvertEntry(UAssetFileBlueprint bp, UAssetCacheBlock cache, DeltaExportPatch patch)
+        public static ItemEntry ConvertEntry(UAssetFileBlueprint bp, UAssetCacheBlock cache, DeltaExportPatch patch)
         {
             //Open reader
             PropertyReader reader = new PropertyReader(bp.GetFullProperties(cache));
@@ -54,7 +33,7 @@ namespace ArkImportTools.OutputEntities
 
             //Get the array of UseItemAddCharacterStatusValues
             ArrayProperty statusValuesArray = reader.GetProperty<ArrayProperty>("UseItemAddCharacterStatusValues");
-            Dictionary<string, ArkItemEntry_ConsumableAddStatusValue> statusValues = new Dictionary<string, ArkItemEntry_ConsumableAddStatusValue>();
+            Dictionary<string, ItemEntry_ConsumableAddStatusValue> statusValues = new Dictionary<string, ItemEntry_ConsumableAddStatusValue>();
             if (statusValuesArray != null)
             {
                 foreach(var i in statusValuesArray.props)
@@ -63,13 +42,13 @@ namespace ArkImportTools.OutputEntities
                     var svp = ((PropListStruct)sv.data).propsList;
                     var svpr = new PropertyReader(svp);
                     string type = svpr.GetProperty<ByteProperty>("StatusValueType").enumValue;
-                    ArkItemEntry_ConsumableAddStatusValue sve = ArkItemEntry_ConsumableAddStatusValue.Convert(svpr, type);
+                    ItemEntry_ConsumableAddStatusValue sve = ArkItemEntry_ConsumableAddStatusValueReader.Convert(svpr, type);
                     statusValues.Add(type, sve);
                 }
             }
 
             //Create
-            ArkItemEntry e = new ArkItemEntry
+            ItemEntry e = new ItemEntry
             {
                 hideFromInventoryDisplay = reader.GetPropertyBool("bHideFromInventoryDisplay", false),
                 useItemDurability = reader.GetPropertyBool("bUseItemDurability", false),
@@ -83,8 +62,7 @@ namespace ArkImportTools.OutputEntities
                 baseCraftingXP = reader.GetPropertyFloat("BaseCraftingXP", 0),
                 baseRepairingXP = reader.GetPropertyFloat("BaseRepairingXP", 0),
                 maxItemQuantity = reader.GetPropertyInt("MaxItemQuantity", 0),
-                classname = bp.classname+"_C",
-                blueprintPath = "N/A",
+                classname = DeltaDataExtractor.Program.TrimArkClassname(bp.classname),
                 icon = icon,
                 broken_icon = brokenIcon,
                 addStatusValues = statusValues
@@ -93,24 +71,11 @@ namespace ArkImportTools.OutputEntities
         }
     }
 
-    public class ArkItemEntry_ConsumableAddStatusValue
+    public static class ArkItemEntry_ConsumableAddStatusValueReader
     {
-        public float baseAmountToAdd { get; set; }
-        public bool percentOfMaxStatusValue { get; set; }
-        public bool percentOfCurrentStatusValue { get; set; }
-        public bool useItemQuality { get; set; }
-        public bool addOverTime { get; set; }
-        public bool setValue { get; set; }
-        public bool setAdditionalValue { get; set; }
-        public float addOverTimeSpeed { get; set; }
-        public float itemQualityAddValueMultiplier { get; set; }
-
-        public string statusValueType; //Enum
-
-
-        public static ArkItemEntry_ConsumableAddStatusValue Convert(PropertyReader reader, string type)
+        public static ItemEntry_ConsumableAddStatusValue Convert(PropertyReader reader, string type)
         {
-            return new ArkItemEntry_ConsumableAddStatusValue
+            return new ItemEntry_ConsumableAddStatusValue
             {
                 baseAmountToAdd = reader.GetPropertyFloat("BaseAmountToAdd", null),
                 percentOfMaxStatusValue = reader.GetPropertyBool("bPercentOfMaxStatusValue", null),

@@ -46,7 +46,7 @@ namespace ArkImportTools.OutputEntities
                 statusComponent = ArkDinoEntryStatusConverter.Convert(statusComponent, statusReader),
                 adultFoods = ArkDinoFoodConverter.Convert(settingsFileAdult, cache),
                 childFoods = ArkDinoFoodConverter.Convert(settingsFileBaby, cache),
-                classname = f.classname,
+                classname = DeltaDataExtractor.Program.TrimArkClassname(f.classname),
                 icon = ImageTool.QueueImage(entryTexture, ImageTool.ImageModifications.None, patch),
             };
 
