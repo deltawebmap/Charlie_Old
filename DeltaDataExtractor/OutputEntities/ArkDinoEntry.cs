@@ -35,9 +35,7 @@ namespace ArkImportTools.OutputEntities
         public Dictionary<DinoStatTypeIndex, float> additiveTamingBonus; //Taming effectiveness
         public Dictionary<DinoStatTypeIndex, float> multiplicativeTamingBonus; //Taming effectiveness
 
-        public int captureTime;
-
-        public static ArkDinoEntry Convert(UAssetFileBlueprint f, UAssetCacheBlock cache, DeltaExportPatch patch)
+        public static ArkDinoEntry Convert(UAssetFileBlueprint f, UAssetCacheBlock cache, DeltaExportPatch patch, PropertyReader primalDataReader, Dictionary<string, PropertyReader> dinoEntries)
         {
             //Open reader
             PropertyReader reader = new PropertyReader(f.GetFullProperties(cache));
@@ -46,15 +44,13 @@ namespace ArkImportTools.OutputEntities
             UAssetFileBlueprint settingsFileAdult = ArkDinoFood.GetAdultFile(f, cache);
             UAssetFileBlueprint settingsFileBaby = ArkDinoFood.GetBabyFile(f, cache);
 
-            //Get time
-            int time = (int)Math.Round((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds);
-
             //Get status component
             UAssetFileBlueprint statusComponent = ArkDinoEntryStatus.GetFile(f, cache);
             PropertyReader statusReader = new PropertyReader(statusComponent.GetFullProperties(cache));
 
             //Use name tag to find entry
-            PropertyReader entry = null;// dinoEntries[tag];
+            string tag = reader.GetPropertyStringOrName("DinoNameTag");
+            PropertyReader entry = dinoEntries[tag];
 
             //Now, load the material used for the dino image
             UAssetFileMaterial entryMaterial = entry.GetProperty<ObjectProperty>("DinoMaterial").GetReferencedFileMaterial();
@@ -76,7 +72,6 @@ namespace ArkImportTools.OutputEntities
                 childFoods = ArkDinoFood.Convert(settingsFileBaby, cache),
                 classname = f.classname,
                 blueprintPath = "N/A",
-                captureTime = time,
                 icon = ImageTool.QueueImage(entryTexture, ImageTool.ImageModifications.None, patch),
                 icon_white = ImageTool.QueueImage(entryTexture, ImageTool.ImageModifications.White, patch)
             };

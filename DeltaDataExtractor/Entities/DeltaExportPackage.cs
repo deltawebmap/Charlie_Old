@@ -9,6 +9,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using UassetToolkit;
+using UassetToolkit.UPropertyTypes;
 
 namespace DeltaDataExtractor.Entities
 {
@@ -91,24 +92,46 @@ namespace DeltaDataExtractor.Entities
         /// <summary>
         /// Extracts data and returns the package
         /// </summary>
-        public Stream Run(out string hash)
+        public Stream Run(UAssetCacheBlock cache, out string hash)
         {
             //Get pathnames that match this
             List<ArkAsset>[] files = DiscoveryService.DiscoverFiles(installation, this);
 
-            //Create a cache block
-            UAssetCacheBlock cache = new UAssetCacheBlock();
+            //Load mod info if this is a mod. TODO
+
+            //Load Primal Data for mod
+            string primalDataPathname = "/Game/PrimalEarth/CoreBlueprints/PrimalGameData_BP";
+            ArkAsset primalDataNs = ArkAsset.GetAssetFromGame(primalDataPathname, installation);
+            UAssetFileBlueprint primalData = UAssetFileBlueprint.OpenFile(primalDataNs.filename, false, primalDataNs.name, this.installation.contentFolder);
+            PropertyReader primalDataReader = new PropertyReader(primalData.GetFullProperties(cache));
+
+            //Load all dino entries
+            var dinoEntriesArray = primalDataReader.GetProperty<ArrayProperty>("DinoEntries");
+            Dictionary<string, PropertyReader> dinoEntries = new Dictionary<string, PropertyReader>(); //Dino entries mapped by tag name
+            foreach(var i in dinoEntriesArray.props)
+            {
+                var ii = ((ObjectProperty)i).GetReferencedFileBlueprint();
+                var iir = new PropertyReader(ii.GetFullProperties(cache));
+                string tag = iir.GetPropertyStringOrName("DinoNameTag");
+                if (!dinoEntries.ContainsKey(tag))
+                    dinoEntries.Add(tag, iir);
+                else
+                    dinoEntries[tag] = iir;
+            }
+
+            //Import dinos
+            var dinos = DinoExtractorService.ExtractDinos(cache, files[(int)ArkAssetType.Dino], patch, primalDataReader, dinoEntries);
 
             //Import items
             var items = ItemExtractorService.ExtractItems(cache, files[(int)ArkAssetType.InventoryItem], patch);
 
-            //Import dinos
-            //var dinos = DinoExtractorService.ExtractDinos(cache, files[(int)ArkAssetType.Dino]);
+            Log.WriteSuccess("Export-Package-Run", $"Package {name}: Processed {dinos.Count} dinos, {items.Count} items");
 
             //Return the package
             return CompilePackage(new Dictionary<string, object>
             {
-                {"items.json", items }
+                {"items.json", items },
+                {"dinos.json", dinos }
             }, out hash);
         }
 

@@ -18,6 +18,11 @@ namespace DeltaDataExtractor.Entities
         /// List of packages we've already exported
         /// </summary>
         public List<DeltaExportBranchPackage> packages = new List<DeltaExportBranchPackage>();
+
+        /// <summary>
+        /// Caches the type of files
+        /// </summary>
+        public Dictionary<string, List<ArkAssetType>> type_cache = new Dictionary<string, List<ArkAssetType>>();
     }
 
     /// <summary>

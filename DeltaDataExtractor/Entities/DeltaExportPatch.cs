@@ -78,16 +78,19 @@ namespace DeltaDataExtractor.Entities
             asset_manager = new SFTPAssetManager();
             asset_manager.Connect();
 
+            //Create cache
+            UassetToolkit.UAssetCacheBlock cache = new UassetToolkit.UAssetCacheBlock();
+
             //Run base game
             DeltaExportPackage basePack = new DeltaExportPackage(this, installation, "ARK: Survival Evolved", "base", false);
-            RunOne(basePack);
+            RunOne(cache, basePack);
             
             //Run mods
             foreach(string id in Program.config.mods)
             {
                 //Create a package for this and compute it
                 DeltaExportPackage pack = new DeltaExportPackage(this, installation, "Test Mod", id, true);
-                RunOne(pack);
+                RunOne(cache, pack);
             }
 
             //Process images
@@ -127,10 +130,10 @@ namespace DeltaDataExtractor.Entities
         /// <summary>
         /// Computes one package
         /// </summary>
-        private string RunOne(DeltaExportPackage pack)
+        private string RunOne(UassetToolkit.UAssetCacheBlock cache, DeltaExportPackage pack)
         {
             //Run and obtain a stream
-            Stream data = pack.Run(out string hash);
+            Stream data = pack.Run(cache, out string hash);
 
             //Create filename
             string filename = tag + "-" + pack.id + ".pdp";

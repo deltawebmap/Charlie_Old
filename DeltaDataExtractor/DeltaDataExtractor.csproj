@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="E:\Users\Roman\source\repos\ArkImportTools\UassetToolkit\UassetToolkit.csproj" />
+    <ProjectReference Include="C:\Users\Roman\source\repos\ArkImportTools\UassetToolkit\UassetToolkit.csproj" />
   </ItemGroup>
 
   <ItemGroup>

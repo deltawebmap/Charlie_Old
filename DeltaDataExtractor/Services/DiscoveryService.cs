@@ -59,8 +59,20 @@ namespace DeltaDataExtractor.Services
                 if (!ok)
                     continue;
 
-                //Go!
-                List<ArkAssetType> types = f.QuickGuessType();
+                //Check if we already know this type
+                List<ArkAssetType> types;
+                if (package.patch.persist.type_cache.ContainsKey(f.fullName))
+                {
+                    //Use from cache
+                    types = package.patch.persist.type_cache[f.fullName];
+                } else
+                {
+                    //We'll need to determine it ourselves
+                    types = f.QuickGuessType();
+                    package.patch.persist.type_cache.Add(f.fullName, types);
+                }
+
+                //Handle
                 foreach(var t in types)
                 {
                     int typeInt = (int)t;
