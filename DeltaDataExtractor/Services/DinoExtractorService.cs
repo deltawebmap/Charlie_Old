@@ -4,15 +4,16 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UassetToolkit;
+using LibDeltaSystem.Entities.ArkEntries.Dinosaur;
 
 namespace DeltaDataExtractor.Services
 {
     public static class DinoExtractorService
     {
-        public static List<ArkDinoEntry> ExtractDinos(UAssetCacheBlock cache, List<ArkAsset> assets, DeltaExportPatch patch, PropertyReader primalDataReader, Dictionary<string, PropertyReader> dinoEntries)
+        public static List<DinosaurEntry> ExtractDinos(UAssetCacheBlock cache, List<ArkAsset> assets, DeltaExportPatch patch, PropertyReader primalDataReader, Dictionary<string, PropertyReader> dinoEntries)
         {
             //Loop through assets and import them
-            List<ArkDinoEntry> dinos = new List<ArkDinoEntry>();
+            List<DinosaurEntry> dinos = new List<DinosaurEntry>();
             foreach(var a in assets)
             {
                 //Open file
@@ -29,7 +30,7 @@ namespace DeltaDataExtractor.Services
                 try
                 {
                     //Create a dino entry
-                    ArkDinoEntry entry = ArkDinoEntry.Convert(f, cache, patch, primalDataReader, dinoEntries);
+                    DinosaurEntry entry = ArkDinoEntryConverter.Convert(f, cache, patch, primalDataReader, dinoEntries);
                     dinos.Add(entry);
                 } catch (Exception ex)
                 {

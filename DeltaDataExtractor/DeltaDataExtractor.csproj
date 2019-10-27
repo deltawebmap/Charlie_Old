@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\LibDeltaSystem\LibDeltaSystem\LibDeltaSystem.csproj" />
     <ProjectReference Include="C:\Users\Roman\source\repos\ArkImportTools\UassetToolkit\UassetToolkit.csproj" />
   </ItemGroup>
 

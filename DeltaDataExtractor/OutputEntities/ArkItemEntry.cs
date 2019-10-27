@@ -1,4 +1,5 @@
 ﻿using DeltaDataExtractor.Entities;
+using LibDeltaSystem.Entities.ArkEntries;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,8 +14,8 @@ namespace ArkImportTools.OutputEntities
         public string classname;
         public string blueprintPath;
 
-        public ArkImage icon;
-        public ArkImage broken_icon;
+        public DeltaAsset icon;
+        public DeltaAsset broken_icon;
 
         public bool hideFromInventoryDisplay { get; set; }
         public bool useItemDurability { get; set; }
@@ -38,18 +39,18 @@ namespace ArkImportTools.OutputEntities
             PropertyReader reader = new PropertyReader(bp.GetFullProperties(cache));
 
             //Get primary icon
-            ArkImage icon;
+            DeltaAsset icon;
             if (reader.GetProperty<ObjectProperty>("ItemIcon") != null)
                 icon = ImageTool.QueueImage(reader.GetProperty<ObjectProperty>("ItemIcon").GetReferencedFile(), ImageTool.ImageModifications.None, patch);
             else
-                icon = ArkImage.MISSING_ICON;
+                icon = DeltaAsset.MISSING_ICON;
 
             //Get broken icon
-            ArkImage brokenIcon;
+            DeltaAsset brokenIcon;
             if (reader.GetProperty<ObjectProperty>("BrokenImage") != null)
                 brokenIcon = ImageTool.QueueImage(reader.GetProperty<ObjectProperty>("BrokenImage").GetReferencedFile(), ImageTool.ImageModifications.None, patch);
             else
-                brokenIcon = ArkImage.MISSING_ICON;
+                brokenIcon = DeltaAsset.MISSING_ICON;
 
             //Get the array of UseItemAddCharacterStatusValues
             ArrayProperty statusValuesArray = reader.GetProperty<ArrayProperty>("UseItemAddCharacterStatusValues");

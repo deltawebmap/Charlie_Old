@@ -5,47 +5,23 @@ using System.Text;
 using UassetToolkit;
 using UassetToolkit.UPropertyTypes;
 using UassetToolkit.UStructTypes;
+using LibDeltaSystem.Entities.ArkEntries.Dinosaur;
 
 namespace ArkImportTools.OutputEntities
 {
-    public class ArkDinoEntry
+    public static class ArkDinoEntryConverter
     {
-        public string screen_name;
-        public float colorizationIntensity;
-        public float babyGestationSpeed;
-        public float extraBabyGestationSpeedMultiplier;
-        public float babyAgeSpeed;
-        public float extraBabyAgeMultiplier;
-        public bool useBabyGestation;
-
-        public ArkDinoEntryStatus statusComponent;
-
-        public List<ArkDinoFood> adultFoods;
-        public List<ArkDinoFood> childFoods;
-
-        public string classname;
-        public string blueprintPath;
-
-        public ArkImage icon;
-        public ArkImage icon_white;
-
-        public Dictionary<DinoStatTypeIndex, float> baseLevel;
-        public Dictionary<DinoStatTypeIndex, float> increasePerWildLevel;
-        public Dictionary<DinoStatTypeIndex, float> increasePerTamedLevel;
-        public Dictionary<DinoStatTypeIndex, float> additiveTamingBonus; //Taming effectiveness
-        public Dictionary<DinoStatTypeIndex, float> multiplicativeTamingBonus; //Taming effectiveness
-
-        public static ArkDinoEntry Convert(UAssetFileBlueprint f, UAssetCacheBlock cache, DeltaExportPatch patch, PropertyReader primalDataReader, Dictionary<string, PropertyReader> dinoEntries)
+        public static DinosaurEntry Convert(UAssetFileBlueprint f, UAssetCacheBlock cache, DeltaExportPatch patch, PropertyReader primalDataReader, Dictionary<string, PropertyReader> dinoEntries)
         {
             //Open reader
             PropertyReader reader = new PropertyReader(f.GetFullProperties(cache));
 
             //Get the dino settings
-            UAssetFileBlueprint settingsFileAdult = ArkDinoFood.GetAdultFile(f, cache);
-            UAssetFileBlueprint settingsFileBaby = ArkDinoFood.GetBabyFile(f, cache);
+            UAssetFileBlueprint settingsFileAdult = ArkDinoFoodConverter.GetAdultFile(f, cache);
+            UAssetFileBlueprint settingsFileBaby = ArkDinoFoodConverter.GetBabyFile(f, cache);
 
             //Get status component
-            UAssetFileBlueprint statusComponent = ArkDinoEntryStatus.GetFile(f, cache);
+            UAssetFileBlueprint statusComponent = ArkDinoEntryStatusConverter.GetFile(f, cache);
             PropertyReader statusReader = new PropertyReader(statusComponent.GetFullProperties(cache));
 
             //Use name tag to find entry
@@ -58,7 +34,7 @@ namespace ArkImportTools.OutputEntities
             ClassnamePathnamePair entryTexture = entryMaterialTexture.prop.GetReferencedFile();
 
             //Read
-            ArkDinoEntry e = new ArkDinoEntry
+            DinosaurEntry e = new DinosaurEntry
             {
                 screen_name = reader.GetPropertyString("DescriptiveName", null),
                 colorizationIntensity = reader.GetPropertyFloat("ColorizationIntensity", 1),
@@ -67,13 +43,11 @@ namespace ArkImportTools.OutputEntities
                 babyAgeSpeed = reader.GetPropertyFloat("BabyAgeSpeed", null),
                 extraBabyAgeMultiplier = reader.GetPropertyFloat("ExtraBabyAgeSpeedMultiplier", -1),
                 useBabyGestation = reader.GetPropertyBool("bUseBabyGestation", false),
-                statusComponent = ArkDinoEntryStatus.Convert(statusComponent, statusReader),
-                adultFoods = ArkDinoFood.Convert(settingsFileAdult, cache),
-                childFoods = ArkDinoFood.Convert(settingsFileBaby, cache),
+                statusComponent = ArkDinoEntryStatusConverter.Convert(statusComponent, statusReader),
+                adultFoods = ArkDinoFoodConverter.Convert(settingsFileAdult, cache),
+                childFoods = ArkDinoFoodConverter.Convert(settingsFileBaby, cache),
                 classname = f.classname,
-                blueprintPath = "N/A",
                 icon = ImageTool.QueueImage(entryTexture, ImageTool.ImageModifications.None, patch),
-                icon_white = ImageTool.QueueImage(entryTexture, ImageTool.ImageModifications.White, patch)
             };
 
             //Finally, read stats
@@ -83,14 +57,8 @@ namespace ArkImportTools.OutputEntities
         }
     }
 
-    public class ArkDinoEntryStatus
+    public static class ArkDinoEntryStatusConverter
     {
-        public float baseFoodConsumptionRate;
-        public float babyDinoConsumingFoodRateMultiplier;
-        public float extraBabyDinoConsumingFoodRateMultiplier;
-        public float foodConsumptionMultiplier;
-        public float tamedBaseHealthMultiplier;
-
         public static UAssetFileBlueprint GetFile(UAssetFileBlueprint f, UAssetCacheBlock cache)
         {
             //Search for this by name
@@ -116,9 +84,9 @@ namespace ArkImportTools.OutputEntities
             return f.GetReferencedUAssetBlueprintFromPathname(pathname);
         }
 
-        public static ArkDinoEntryStatus Convert(UAssetFileBlueprint f, PropertyReader reader)
+        public static DinosaurEntryStatusComponent Convert(UAssetFileBlueprint f, PropertyReader reader)
         {
-            return new ArkDinoEntryStatus
+            return new DinosaurEntryStatusComponent
             {
                 baseFoodConsumptionRate = reader.GetPropertyFloat("BaseFoodConsumptionRate", null),
                 babyDinoConsumingFoodRateMultiplier = reader.GetPropertyFloat("BabyDinoConsumingFoodRateMultiplier", 25.5f),
@@ -129,15 +97,8 @@ namespace ArkImportTools.OutputEntities
         }
     }
 
-    public class ArkDinoFood
+    public static class ArkDinoFoodConverter
     {
-        public string classname;
-        public float foodEffectivenessMultiplier;
-        public float affinityOverride;
-        public float affinityEffectivenessMultiplier;
-        public int foodCategory;
-        public float priority;
-
         public static UAssetFileBlueprint GetAdultFile(UAssetFileBlueprint f, UAssetCacheBlock cache)
         {
             //First, try to see if it's a property
@@ -176,11 +137,11 @@ namespace ArkImportTools.OutputEntities
             return GetAdultFile(f, cache);
         }
 
-        public static List<ArkDinoFood> Convert(UAssetFileBlueprint f, UAssetCacheBlock cache)
+        public static List<DinosaurEntryFood> Convert(UAssetFileBlueprint f, UAssetCacheBlock cache)
         {
             //Open reader
             PropertyReader reader = new PropertyReader(f.GetFullProperties(cache));
-            List<ArkDinoFood> output = new List<ArkDinoFood>();
+            List<DinosaurEntryFood> output = new List<DinosaurEntryFood>();
 
             //Get each
             ArrayProperty mBase = reader.GetProperty<ArrayProperty>("FoodEffectivenessMultipliers");
@@ -195,17 +156,17 @@ namespace ArkImportTools.OutputEntities
             return output;
         }
 
-        private static List<ArkDinoFood> ConvertMultiplier(UAssetFileBlueprint f, UAssetCacheBlock cache, ArrayProperty p)
+        private static List<DinosaurEntryFood> ConvertMultiplier(UAssetFileBlueprint f, UAssetCacheBlock cache, ArrayProperty p)
         {
             //Convert each entry
-            List<ArkDinoFood> output = new List<ArkDinoFood>();
+            List<DinosaurEntryFood> output = new List<DinosaurEntryFood>();
             foreach (var s in p.props)
             {
                 StructProperty data = (StructProperty)s;
                 PropListStruct sdata = (PropListStruct)data.data;
                 PropertyReader reader = new PropertyReader(sdata.propsList);
                 UAssetFileBlueprint foodClass = reader.GetProperty<ObjectProperty>("FoodItemParent").GetReferencedFileBlueprint();
-                ArkDinoFood food = new ArkDinoFood
+                DinosaurEntryFood food = new DinosaurEntryFood
                 {
                     classname = foodClass.classname,
                     foodEffectivenessMultiplier = reader.GetPropertyFloat("FoodEffectivenessMultiplier", null),
@@ -218,21 +179,5 @@ namespace ArkImportTools.OutputEntities
             }
             return output;
         }
-    }
-
-    public enum DinoStatTypeIndex
-    {
-        Health = 0,
-        Stamina = 1,
-        Torpidity = 2,
-        Oxygen = 3,
-        Food = 4,
-        Water = 5,
-        Temperature = 6,
-        Weight = 7,
-        MeleeDamage = 8,
-        Speed = 9,
-        TemperatureFortitude = 10,
-        CraftingSpeed = 11
     }
 }

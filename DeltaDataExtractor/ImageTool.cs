@@ -14,6 +14,7 @@ using DeltaDataExtractor;
 using DeltaDataExtractor.Entities;
 using System.Security.Cryptography;
 using System.Linq;
+using LibDeltaSystem.Entities.ArkEntries;
 
 namespace ArkImportTools
 {
@@ -21,7 +22,7 @@ namespace ArkImportTools
     {
         public const string FORMAT_TYPE = ".png";
 
-        public static ArkImage QueueImage(ClassnamePathnamePair name, ImageModifications mods, DeltaExportPatch patch)
+        public static DeltaAsset QueueImage(ClassnamePathnamePair name, ImageModifications mods, DeltaExportPatch patch)
         {
             return QueueImage(name.classname, name.pathname, mods, patch);
         }
@@ -31,7 +32,7 @@ namespace ArkImportTools
             return Program.config.GetProfile().upload_url_base;
         }
 
-        public static ArkImage QueueImage(string classname, string pathname, ImageModifications mods, DeltaExportPatch patch)
+        public static DeltaAsset QueueImage(string classname, string pathname, ImageModifications mods, DeltaExportPatch patch)
         {
             //SHA1 this file for version control
             byte[] hashBytes = new SHA1Managed().ComputeHash(File.ReadAllBytes(pathname));
@@ -82,7 +83,7 @@ namespace ArkImportTools
             }
 
             //Now, create an ArkImage
-            ArkImage r = new ArkImage
+            DeltaAsset r = new DeltaAsset
             {
                 image_thumb_url = GetAssetsUrl()+ loId+FORMAT_TYPE,
                 image_url = GetAssetsUrl()+ hiId+FORMAT_TYPE

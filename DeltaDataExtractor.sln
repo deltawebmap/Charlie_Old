@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeltaDataExtractor", "Delta
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UassetToolkit", "C:\Users\Roman\source\repos\ArkImportTools\UassetToolkit\UassetToolkit.csproj", "{8FE2FE61-EAA1-4514-8D61-8E6626282AFE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibDeltaSystem", "..\..\LibDeltaSystem\LibDeltaSystem\LibDeltaSystem.csproj", "{20AB7E2F-77B6-4ACA-A805-702DC45C7C50}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{8FE2FE61-EAA1-4514-8D61-8E6626282AFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8FE2FE61-EAA1-4514-8D61-8E6626282AFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8FE2FE61-EAA1-4514-8D61-8E6626282AFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20AB7E2F-77B6-4ACA-A805-702DC45C7C50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20AB7E2F-77B6-4ACA-A805-702DC45C7C50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20AB7E2F-77B6-4ACA-A805-702DC45C7C50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20AB7E2F-77B6-4ACA-A805-702DC45C7C50}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,6 +1,7 @@
 ﻿using DeltaDataExtractor.OutputEntities;
 using DeltaDataExtractor.Services;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -130,8 +131,8 @@ namespace DeltaDataExtractor.Entities
             //Return the package
             return CompilePackage(new Dictionary<string, object>
             {
-                {"items.json", items },
-                {"dinos.json", dinos }
+                {"items.bson", items },
+                {"dinos.bson", dinos }
             }, out hash);
         }
 
@@ -151,47 +152,39 @@ namespace DeltaDataExtractor.Entities
                 //Add all
                 foreach (var o in payload)
                 {
-                    CompilePackageHelper(archive, o.Key, o.Value, dataStream);
-                }
-
-                //Rewind and SHA-1
-                dataStream.Position = 0;
-                using (SHA1Managed sha1 = new SHA1Managed())
-                {
-                    byte[] hashBytes = sha1.ComputeHash(dataStream);
-                    hash = string.Concat(hashBytes.Select(b => b.ToString("x2")));
+                    CompilePackageHelper(archive, o.Key, o.Value);
                 }
             }
 
-
-            //Add the metadata
-            CompilePackageHelper(archive, "metadata.json", new DeltaExportPackageMetadata
-            {
-                id = id,
-                name = name,
-                patch_tag = patch.tag,
-                time = patch.time,
-                sha1 = hash
-            });
-
             //Close the archive and rewind the stream
             archive.Dispose();
-            stream.Position = 0;
 
+            //Rewind and SHA-1
+            stream.Position = 0;
+            using (SHA1Managed sha1 = new SHA1Managed())
+            {
+                byte[] hashBytes = sha1.ComputeHash(stream);
+                hash = string.Concat(hashBytes.Select(b => b.ToString("x2")));
+            }
+
+            //Rewind and return
+            stream.Position = 0;
             return stream;
         }
 
-        private void CompilePackageHelper(ZipArchive zip, string name, object data, MemoryStream totalOutput = null)
+        private ZipArchiveEntry CompilePackageHelper(ZipArchive zip, string name, object data)
         {
-            //Convert to JSON and get bytes
-            byte[] payload = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data));
-
             //Create an entry and begin writing
             ZipArchiveEntry entry = zip.CreateEntry(name);
             using (var stream = entry.Open())
-                stream.Write(payload, 0, payload.Length);
-            if(totalOutput != null)
-                totalOutput.Write(payload, 0, payload.Length);
+            {
+                using (BsonWriter writer = new BsonWriter(stream))
+                {
+                    JsonSerializer serializer = new JsonSerializer();
+                    serializer.Serialize(writer, data);
+                }
+            }
+            return entry;
         }
     }
 }
